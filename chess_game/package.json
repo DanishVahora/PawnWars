@@ -11,7 +11,9 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.0.6",
+    "chess.js": "^1.0.0",
     "react": "^19.0.0",
+    "react-chessboard": "^4.7.2",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.1.5",
     "socket.io-client": "^4.8.1",

@@ -35,6 +35,10 @@ const LobbyPage: React.FC = () => {
     });
   };
 
+  const handleWatch = () => {
+    navigate('/stockfishGame');
+  };
+
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gray-900 text-white">
       <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-96">
@@ -61,9 +65,15 @@ const LobbyPage: React.FC = () => {
         </button>
         <button
           onClick={handleJoinRoom}
-          className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-md transition duration-300"
+          className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-md transition duration-300 mb-2"
         >
           Join Room
+        </button>
+        <button
+          onClick={handleWatch}
+          className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 rounded-md transition duration-300"
+        >
+          Watch Engine vs Engine
         </button>
         {error && <p className="text-red-500 text-center mt-4">{error}</p>}
       </div>
