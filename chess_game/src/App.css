@@ -1,0 +1,69 @@
+/* App.css */
+.lobby {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  padding: 20px;
+}
+
+.lobby input {
+  padding: 10px;
+  font-size: 16px;
+}
+
+.lobby button {
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.error {
+  color: red;
+}
+
+.game-container {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+}
+
+.left-panel {
+  flex: 3;
+}
+
+.right-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.timers {
+  display: flex;
+  justify-content: space-between;
+  margin: 15px 0;
+}
+
+.chat {
+  height: 300px;
+  border: 1px solid #ccc;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+/* App.css */
+.start-game-button {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+.start-game-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
