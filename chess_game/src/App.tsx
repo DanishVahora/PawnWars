@@ -3,13 +3,15 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LobbyPage from './LobbyPage';
 import StockfishVsStockfish from './StockfishVsStockfish';
 import GamePage from './GamePage';
+import EnginePage from './EnginePage';
 
 const App: React.FC = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<LobbyPage />} />
-        <Route path="/stockfishGame" element={<StockfishVsStockfish />} />
+      <Route path="/" element={<LobbyPage />} />
+      <Route path="/enginePage" element={<EnginePage />} />
+      <Route path="/stockfishGame" element={<StockfishVsStockfish />} />
         <Route path="/game/:roomId" element={<GamePage />} />
       </Routes>
     </Router>
