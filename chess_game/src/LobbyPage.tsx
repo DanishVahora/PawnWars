@@ -1,120 +1,108 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import io from 'socket.io-client';
+import { socket } from '../socket';
 
-const socket = io('http://localhost:5000');
+interface LobbyPageProps {
+  setUsername: (username: string) => void;
+  setRoomId: (roomId: string) => void;
+  setPlayerColor: (color: 'white' | 'black') => void;
+}
 
-const LobbyPage: React.FC = () => {
-  const [username, setUsername] = useState('');
-  const [roomId, setRoomId] = useState('');
-  const [error, setError] = useState('');
-  const [color, setColor] = useState<'white' | 'black'>('white');
+const LobbyPage: React.FC<LobbyPageProps> = ({ setUsername, setRoomId, setPlayerColor }) => {
+  const [usernameInput, setUsernameInput] = useState('');
+  const [roomInput, setRoomInput] = useState('');
   const navigate = useNavigate();
 
-  const handleCreateRoom = () => {
-    if (!username) {
-      setError('Please enter a username');
-      return;
-    }
-    socket.emit('createRoom', { username, color });
-    socket.on('roomCreated', (roomId: string) => {
-      navigate(`/game/${roomId}`);
+  const createRoom = () => {
+    if (!usernameInput) return;
+
+    const newRoomId = Math.random().toString(36).substring(7);
+    // Room creator always gets white pieces
+    socket.emit('create-room', {
+      roomId: newRoomId,
+      username: usernameInput,
+      color: 'white' // Fixed color for room creator
     });
+
+    setUsername(usernameInput);
+    setRoomId(newRoomId);
+    setPlayerColor('white'); // Always set white for creator
+    navigate(`/game/${newRoomId}`);
   };
 
-  const handleJoinRoom = () => {
-    if (!username || !roomId) {
-      setError('Please enter a username and room ID');
-      return;
-    }
-    socket.emit('joinRoom', { roomId, username, color });
-    socket.on('playerJoined', () => {
-      navigate(`/game/${roomId}`);
-    });
-    socket.on('joinError', (message: string) => {
-      setError(message);
-    });
-  };
+  const joinRoom = () => {
+    if (!usernameInput || !roomInput) return;
 
-  const handleWatch = () => {
-    navigate('/stockfishGame');
-  };
+    // Joining player always gets black pieces
+    socket.emit('join-room', {
+      roomId: roomInput,
+      username: usernameInput,
+      color: 'black' // Fixed color for joining player
+    });
 
-  const handleEngine = () => {
-    navigate(`/enginePage?color=${color}`);
+    setUsername(usernameInput);
+    setRoomId(roomInput);
+    setPlayerColor('black'); // Always set black for joiner
+    navigate(`/game/${roomInput}`);
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-br from-gray-900 to-black text-white p-6">
-      <div className="bg-gray-800 p-10 rounded-lg shadow-2xl w-[600px] text-center">
-        <h1 className="text-3xl font-bold mb-6">Chess Lobby</h1>
-        
-        {/* Room Controls */}
-        <div className="mb-6 p-6 bg-gray-700 rounded-lg">
-          <input
-            type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="w-full p-3 mb-4 bg-gray-600 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <input
-            type="text"
-            placeholder="Room ID (if joining)"
-            value={roomId}
-            onChange={(e) => setRoomId(e.target.value)}
-            className="w-full p-3 mb-4 bg-gray-600 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <div className="flex justify-center gap-4 mb-4">
-            <button
-              onClick={handleCreateRoom}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-md transition duration-300"
-            >
-              Create Room
-            </button>
-            <button
-              onClick={handleJoinRoom}
-              className="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-md transition duration-300"
-            >
-              Join Room
-            </button>
-          </div>
-          <div className="flex justify-center space-x-4">
-            <button
-              onClick={() => setColor('white')}
-              className={`py-2 px-4 rounded-md transition duration-300 ${color === 'white' ? 'bg-blue-500' : 'bg-gray-600 hover:bg-gray-500'}`}
-            >
-              Play as White
-            </button>
-            <button
-              onClick={() => setColor('black')}
-              className={`py-2 px-4 rounded-md transition duration-300 ${color === 'black' ? 'bg-blue-500' : 'bg-gray-600 hover:bg-gray-500'}`}
-            >
-              Play as Black
-            </button>
-          </div>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+        <h2 className="text-2xl font-bold mb-6 text-center">Chess Game Lobby</h2>
 
-        {/* Engine Section */}
-        <div className="p-6 bg-gray-700 rounded-lg">
-          <h2 className="text-xl font-semibold mb-4">Engine Matches</h2>
-          <div className="flex flex-col gap-4">
-            <button
-              onClick={handleWatch}
-              className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 rounded-md transition duration-300"
-            >
-              Watch Engine vs Engine
-            </button>
-            <button
-              onClick={handleEngine}
-              className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 rounded-md transition duration-300"
-            >
-              Play vs Engine ({color})
-            </button>
+        <div className="space-y-4">
+          <input
+            type="text"
+            placeholder="Enter username"
+            value={usernameInput}
+            onChange={(e) => setUsernameInput(e.target.value)}
+            className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+
+          <button
+            onClick={createRoom}
+            disabled={!usernameInput}
+            className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Create New Room (White Pieces)
+          </button>
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">Or</span>
+            </div>
           </div>
+
+          <input
+            type="text"
+            placeholder="Enter room code"
+            value={roomInput}
+            onChange={(e) => setRoomInput(e.target.value)}
+            className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+
+          <button
+            onClick={joinRoom}
+            disabled={!usernameInput || !roomInput}
+            className="w-full bg-green-500 text-white p-2 rounded hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Join Room (Black Pieces)
+          </button>
+          <hr />
+          <button
+            onClick={() => navigate('/playEngine')}
+            className="w-full bg-red-500 text-white p-2 rounded hover:bg-red-600"
+            >play VS engine</button>
+            <button
+            onClick={() => navigate('/stockfishVsStockfish')}
+            className="w-full bg-red-500 text-white p-2 rounded hover:bg-red-600"
+            >stockfish Vs stockfish</button>
+          
         </div>
-        
-        {error && <p className="text-red-500 text-center mt-4">{error}</p>}
       </div>
     </div>
   );

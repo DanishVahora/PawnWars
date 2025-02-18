@@ -14,13 +14,18 @@ class Engine {
       const bestMove = e.data?.match(/bestmove\s+(\S+)/)?.[1];
       const evalMatch = e.data?.match(/cp\s+(-?\d+)/); // Centipawn score
       const mateMatch = e.data?.match(/mate\s+(-?\d+)/); // Mate score
-      
+
       let evaluation: number | undefined = evalMatch ? parseInt(evalMatch[1], 10) : undefined;
-      
+
       if (mateMatch) {
-        evaluation = mateMatch[1] === "0" ? 0 : mateMatch[1].startsWith("-") ? -9999 : 9999;
+        // If mate is detected, set a large positive or negative value
+        // so we can differentiate it in the UI.
+        if (mateMatch[1] === "0") {
+          evaluation = 0; // immediate mate
+        } else {
+          evaluation = mateMatch[1].startsWith("-") ? -9999 : 9999;
+        }
       }
-      
 
       callback({ bestMove, eval: evaluation });
     });
@@ -120,91 +125,112 @@ const EnginePage: React.FC = () => {
     setGameStatus("Game in progress...");
 
     if (color === "black") {
-      findBestMove(); // Let Stockfish play first
+      // Let Stockfish move first
+      findBestMove();
     }
   };
 
+  // Helper to clamp eval to a range so the bar doesn't overflow
+  const clampEval = (val: number, min: number, max: number) =>
+    Math.min(Math.max(val, min), max);
+
+  // Convert the evaluation into a 0–100 percentage for the bar
+  // We'll allow -1000 to +1000 for the bar extremes
+  const EVAL_MIN = -1000;
+  const EVAL_MAX = 1000;
+  const clampedValue = clampEval(evaluation, EVAL_MIN, EVAL_MAX);
+  const percentage = ((clampedValue - EVAL_MIN) / (EVAL_MAX - EVAL_MIN)) * 100;
+
+  // What to display in the middle of the bar
+  const displayEval =
+    evaluation > 9999 ? "M#" : evaluation < -9999 ? "#M" : evaluation;
+
   return (
-    <div style={{ maxWidth: "600px", margin: "auto", textAlign: "center" }}>
-      {/* Difficulty Selection */}
-      <div style={{ display: "flex", justifyContent: "center", marginBottom: "1rem" }}>
-        {Object.entries(levels).map(([levelName, depth]) => (
-          <button
-            key={levelName}
-            style={{
-              margin: "0.5rem",
-              padding: "0.5rem 1rem",
-              cursor: "pointer",
-              border: "none",
-              borderRadius: "5px",
-              backgroundColor: depth === stockfishLevel ? "#B58863" : "#f0d9b5",
+    <div className="flex flex-col h-screen bg-gray-900 text-white">
+      {/* Header Section */}
+      <div className="p-4 bg-gray-800">
+        <h1 className="text-3xl font-bold text-center mb-4">Play vs Stockfish</h1>
+        
+        {/* Difficulty Selection */}
+        <div className="flex justify-center gap-3 mb-4">
+          {Object.entries(levels).map(([levelName, depth]) => (
+            <button
+              key={levelName}
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                depth === stockfishLevel
+                  ? "bg-blue-600 text-white font-bold"
+                  : "bg-gray-700 hover:bg-gray-600"
+              }`}
+              onClick={() => setStockfishLevel(depth)}
+            >
+              {levelName}
+            </button>
+          ))}
+        </div>
+
+        {/* Evaluation Bar */}
+        <div className="w-full max-w-2xl mx-auto h-6 bg-gray-700 rounded-lg overflow-hidden relative">
+          <div
+            className={`h-full transition-all duration-300 ${
+              clampedValue >= 0 ? "bg-green-500" : "bg-red-500"
+            }`}
+            style={{ width: `${percentage}%` }}
+          ></div>
+          <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white">
+            {displayEval}
+          </span>
+        </div>
+      </div>
+
+      {/* Main Game Section */}
+      <div className="flex-1 flex justify-center items-center p-4">
+        <div className="w-full max-w-[80vh] aspect-square">
+          <Chessboard
+            id="PlayVsStockfish"
+            position={gamePosition}
+            onPieceDrop={onDrop}
+            boardOrientation={playerColor}
+            customBoardStyle={{
+              borderRadius: "4px",
+              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
             }}
-            onClick={() => setStockfishLevel(depth)}
+          />
+        </div>
+      </div>
+
+      {/* Footer Section */}
+      <div className="p-4 bg-gray-800">
+        {/* Game Status */}
+        <p className="text-xl font-bold text-center mb-4">
+          {gameStatus}
+        </p>
+
+        {/* Controls */}
+        <div className="flex justify-center gap-3">
+          <button
+            className="px-6 py-2 bg-white text-gray-900 rounded-lg hover:bg-gray-200 transition-colors font-bold"
+            onClick={() => startNewGame("white")}
           >
-            {levelName}
+            Play as White
           </button>
-        ))}
-      </div>
-
-      {/* Evaluation Bar */}
-      <div style={{ height: "20px", backgroundColor: "#ccc", marginBottom: "1rem", position: "relative" }}>
-        <div
-          style={{
-            width: `${(evaluation + 1000) / 20}%`,
-            height: "100%",
-            backgroundColor: evaluation > 0 ? "#4CAF50" : "#FF5722",
-          }}
-        ></div>
-        <span
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            color: "#000",
-            fontWeight: "bold",
-          }}
-        >
-          {evaluation > 9999 ? "M#" : evaluation < -9999 ? "#M" : evaluation}
-        </span>
-      </div>
-
-      {/* Game Board */}
-      <Chessboard
-        id="PlayVsStockfish"
-        position={gamePosition}
-        onPieceDrop={onDrop}
-        boardOrientation={playerColor}
-      />
-
-      {/* Game Status */}
-      <p style={{ fontSize: "1.2rem", fontWeight: "bold", marginTop: "1rem" }}>{gameStatus}</p>
-
-      {/* Controls */}
-      <div style={{ marginTop: "1rem" }}>
-        <button
-          style={{ margin: "0.5rem", padding: "0.5rem 1rem", borderRadius: "5px", backgroundColor: "#4CAF50", color: "white" }}
-          onClick={() => startNewGame("white")}
-        >
-          Play as White
-        </button>
-        <button
-          style={{ margin: "0.5rem", padding: "0.5rem 1rem", borderRadius: "5px", backgroundColor: "#000", color: "white" }}
-          onClick={() => startNewGame("black")}
-        >
-          Play as Black
-        </button>
-        <button
-          style={{ margin: "0.5rem", padding: "0.5rem 1rem", borderRadius: "5px", backgroundColor: "#FF5722", color: "white" }}
-          onClick={() => {
-            game.undo();
-            game.undo();
-            setGamePosition(game.fen());
-            updateGameStatus();
-          }}
-        >
-          Undo
-        </button>
+          <button
+            className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-700 transition-colors font-bold border border-white"
+            onClick={() => startNewGame("black")}
+          >
+            Play as Black
+          </button>
+          <button
+            className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-bold"
+            onClick={() => {
+              game.undo();
+              game.undo();
+              setGamePosition(game.fen());
+              updateGameStatus();
+            }}
+          >
+            Undo
+          </button>
+        </div>
       </div>
     </div>
   );
