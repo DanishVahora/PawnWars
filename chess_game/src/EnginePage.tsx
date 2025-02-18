@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { Chessboard } from "react-chessboard";
 import { Chess } from "chess.js";
+import { Link } from "react-router-dom";
 
 class Engine {
   private stockfish: Worker;
@@ -149,7 +150,8 @@ const EnginePage: React.FC = () => {
     <div className="flex flex-col h-screen bg-gray-900 text-white">
       {/* Header Section */}
       <div className="p-4 bg-gray-800">
-        <h1 className="text-3xl font-bold text-center mb-4">Play vs Stockfish</h1>
+        <h1 className="text-6xl font-bold text-center mb-4 text-yellow-400 tracking-wide">PawnWars</h1>
+        <h2 className="text-3xl font-bold text-center mb-4">Play vs Stockfish</h2>
         
         {/* Difficulty Selection */}
         <div className="flex justify-center gap-3 mb-4">
@@ -191,8 +193,9 @@ const EnginePage: React.FC = () => {
             onPieceDrop={onDrop}
             boardOrientation={playerColor}
             customBoardStyle={{
-              borderRadius: "4px",
-              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+              borderRadius: "8px",
+              boxShadow: "0 8px 16px rgba(0, 0, 0, 0.3)",
+              border: "2px solid #4a5568"
             }}
           />
         </div>
@@ -206,7 +209,7 @@ const EnginePage: React.FC = () => {
         </p>
 
         {/* Controls */}
-        <div className="flex justify-center gap-3">
+        <div className="flex justify-center gap-3 mb-4">
           <button
             className="px-6 py-2 bg-white text-gray-900 rounded-lg hover:bg-gray-200 transition-colors font-bold"
             onClick={() => startNewGame("white")}
@@ -230,6 +233,21 @@ const EnginePage: React.FC = () => {
           >
             Undo
           </button>
+        </div>
+
+        {/* Home Link */}
+        <div className="text-center mb-4">
+          <Link 
+            to="/" 
+            className="text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            Back to Lobby
+          </Link>
+        </div>
+
+        {/* Creator Credits */}
+        <div className="text-center text-gray-400 text-sm">
+          Created by Danish
         </div>
       </div>
     </div>

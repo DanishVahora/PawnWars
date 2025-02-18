@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Chessboard } from 'react-chessboard';
 import { Chess } from 'chess.js';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { socket } from '../socket';
 
 interface GamePageProps {
@@ -187,17 +187,23 @@ const GamePage: React.FC<GamePageProps> = ({ username, playerColor }) => {
   };
 
   return (
-    <div className="min-h-screen p-4 bg-gray-100">
+    <div className="min-h-screen p-4 bg-gray-900 text-white">
+      {/* Header with Logo */}
+      <div className="mb-6 text-center">
+        <h1 className="text-6xl font-bold mb-2 text-yellow-400 tracking-wide">PawnWars</h1>
+        <h2 className="text-2xl">Multiplayer Match</h2>
+      </div>
+      
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-4">
         {/* Chat Section - Left Side */}
         <div className="lg:col-span-1">
-          <div className="bg-white p-4 rounded-lg shadow-md h-[600px] flex flex-col">
-            <h2 className="text-xl font-bold mb-4">Chat</h2>
-            <div className="flex-grow overflow-auto mb-4 p-4 border rounded-md" ref={chatRef}>
+          <div className="bg-gray-800 p-4 rounded-lg shadow-lg h-[600px] flex flex-col">
+            <h2 className="text-xl font-bold mb-4 text-yellow-300">Chat</h2>
+            <div className="flex-grow overflow-auto mb-4 p-4 border border-gray-700 rounded-md bg-gray-900" ref={chatRef}>
               {chatMessages.map((msg, idx) => (
                 <div 
                   key={idx}
-                  className={`mb-2 ${msg.username === username ? 'text-blue-600' : 'text-gray-700'}`}
+                  className={`mb-2 ${msg.username === username ? 'text-blue-400' : 'text-gray-300'}`}
                 >
                   <span className="font-bold">{msg.username}: </span>
                   {msg.message}
@@ -211,11 +217,11 @@ const GamePage: React.FC<GamePageProps> = ({ username, playerColor }) => {
                 onChange={(e) => setMessageInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
                 placeholder="Type a message..."
-                className="flex-grow p-2 border rounded"
+                className="flex-grow p-2 border rounded bg-gray-700 text-white border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button 
                 onClick={sendMessage}
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
               >
                 Send
               </button>
@@ -225,13 +231,13 @@ const GamePage: React.FC<GamePageProps> = ({ username, playerColor }) => {
 
         {/* Chess Board - Center */}
         <div className="lg:col-span-2">
-          <div className="bg-white p-4 rounded-lg shadow-md">
+          <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
             <div className="mb-4 flex justify-between items-center">
-              <h2 className="text-xl font-bold">
+              <h2 className="text-xl font-bold text-gray-300">
                 {opponent && playerColor === 'black' ? opponent : username} (Black)
               </h2>
               {gameStatus && (
-                <div className="text-red-500 font-bold">{gameStatus}</div>
+                <div className="text-red-400 font-bold">{gameStatus}</div>
               )}
             </div>
             
@@ -242,14 +248,19 @@ const GamePage: React.FC<GamePageProps> = ({ username, playerColor }) => {
                 onSquareClick={onSquareClick}
                 boardOrientation={playerColor}
                 customSquareStyles={customSquareStyles()}
+                customBoardStyle={{
+                  borderRadius: "8px",
+                  boxShadow: "0 8px 16px rgba(0, 0, 0, 0.3)",
+                  border: "2px solid #4a5568"
+                }}
               />
             </div>
             
             <div className="mt-4 flex justify-between items-center">
-              <h2 className="text-xl font-bold">
+              <h2 className="text-xl font-bold text-gray-300">
                 {opponent && playerColor === 'white' ? opponent : username} (White)
               </h2>
-              <div className="text-gray-600">
+              <div className="text-gray-400">
                 Room: {roomId}
               </div>
             </div>
@@ -258,19 +269,29 @@ const GamePage: React.FC<GamePageProps> = ({ username, playerColor }) => {
 
         {/* Move History - Right Side */}
         <div className="lg:col-span-1">
-          <div className="bg-white p-4 rounded-lg shadow-md h-[600px] overflow-auto">
-            <h2 className="text-xl font-bold mb-4">Move History</h2>
+          <div className="bg-gray-800 p-4 rounded-lg shadow-lg h-[600px] overflow-auto">
+            <h2 className="text-xl font-bold mb-4 text-yellow-300">Move History</h2>
             <div className="space-y-2">
               {moveHistory.map((move, index) => (
                 <div 
                   key={index}
-                  className="p-2 hover:bg-gray-100 rounded"
+                  className="p-2 hover:bg-gray-700 rounded text-gray-300"
                 >
                   {move.move}
                 </div>
               ))}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Back to Lobby Link and Footer */}
+      <div className="mt-6 text-center">
+        <Link to="/" className="text-blue-400 hover:text-blue-300 transition-colors mb-4 inline-block">
+          Back to Lobby
+        </Link>
+        <div className="text-gray-400 text-sm mt-4">
+          Created by Danish
         </div>
       </div>
     </div>
