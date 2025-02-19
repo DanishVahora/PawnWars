@@ -9,7 +9,7 @@ app.use(cors());
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173", // Update this with your frontend URL
+    origin: "http://localhost:5173", 
     methods: ["GET", "POST"]
   }
 });
@@ -48,8 +48,14 @@ io.on('connection', (socket) => {
       
       socket.join(roomId);
       
-      // Notify the room about the new player
-      io.to(roomId).emit('opponent-joined', { username });
+      // Send initial data to the new player
+      socket.emit('initial-data', {
+        moves: room.moves,
+        players: room.players
+      });
+      
+      // Notify both players about the updated player list
+      io.to(roomId).emit('players-updated', room.players);
       console.log(`${username} joined room ${roomId}`);
     }
   });
@@ -67,6 +73,17 @@ io.on('connection', (socket) => {
   // Handle chat messages
   socket.on('send-message', ({ roomId, username, message }) => {
     io.to(roomId).emit('chat-message', { username, message });
+  });
+
+  socket.on('request-initial-data', (roomId) => {
+    const room = rooms.get(roomId);
+    if (room) {
+      // Send move history and players list
+      socket.emit('initial-data', {
+        moves: room.moves,
+        players: room.players
+      });
+    }
   });
 
   // Handle disconnection

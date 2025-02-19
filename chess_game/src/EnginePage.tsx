@@ -146,112 +146,130 @@ const EnginePage: React.FC = () => {
   const displayEval =
     evaluation > 9999 ? "M#" : evaluation < -9999 ? "#M" : evaluation;
 
-  return (
-    <div className="flex flex-col h-screen bg-gray-900 text-white">
-      {/* Header Section */}
-      <div className="p-4 bg-gray-800">
-        <h1 className="text-6xl font-bold text-center mb-4 text-yellow-400 tracking-wide">PawnWars</h1>
-        <h2 className="text-3xl font-bold text-center mb-4">Play vs Stockfish</h2>
-        
-        {/* Difficulty Selection */}
-        <div className="flex justify-center gap-3 mb-4">
-          {Object.entries(levels).map(([levelName, depth]) => (
-            <button
-              key={levelName}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                depth === stockfishLevel
-                  ? "bg-blue-600 text-white font-bold"
-                  : "bg-gray-700 hover:bg-gray-600"
-              }`}
-              onClick={() => setStockfishLevel(depth)}
-            >
-              {levelName}
-            </button>
-          ))}
+    return (
+      <div className="min-h-screen p-4 bg-gray-900 text-white">
+        <div className="mb-6 text-center">
+          <h1 className="text-6xl font-bold mb-2 text-yellow-400 tracking-wide">PawnWars</h1>
+          <h2 className="text-2xl">Play vs Computer</h2>
         </div>
-
-        {/* Evaluation Bar */}
-        <div className="w-full max-w-2xl mx-auto h-6 bg-gray-700 rounded-lg overflow-hidden relative">
-          <div
-            className={`h-full transition-all duration-300 ${
-              clampedValue >= 0 ? "bg-green-500" : "bg-red-500"
-            }`}
-            style={{ width: `${percentage}%` }}
-          ></div>
-          <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white">
-            {displayEval}
-          </span>
+  
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-4">
+          {/* Controls Section */}
+          <div className="lg:col-span-1">
+            <div className="bg-gray-800 p-4 rounded-lg shadow-lg h-[600px] flex flex-col">
+              <h2 className="text-xl font-bold mb-4 text-yellow-300">Game Controls</h2>
+              <div className="flex-grow overflow-auto mb-4 p-4 border border-gray-700 rounded-md bg-gray-900">
+                <div className="space-y-4">
+                  <h3 className="font-bold text-yellow-300">Difficulty</h3>
+                  <div className="flex flex-col gap-2">
+                    {Object.entries(levels).map(([levelName, depth]) => (
+                      <button
+                        key={levelName}
+                        className={`px-4 py-2 rounded-lg transition-colors ${
+                          depth === stockfishLevel
+                            ? "bg-blue-600 text-white font-bold"
+                            : "bg-gray-700 hover:bg-gray-600"
+                        }`}
+                        onClick={() => setStockfishLevel(depth)}
+                      >
+                        {levelName}
+                      </button>
+                    ))}
+                  </div>
+  
+                  <h3 className="font-bold text-yellow-300 mt-6">Evaluation</h3>
+                  <div className="w-full h-6 bg-gray-700 rounded-lg overflow-hidden relative">
+                    <div
+                      className={`h-full transition-all duration-300 ${
+                        clampedValue >= 0 ? "bg-green-500" : "bg-red-500"
+                      }`}
+                      style={{ width: `${percentage}%` }}
+                    ></div>
+                    <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white">
+                      {displayEval}
+                    </span>
+                  </div>
+  
+                  <h3 className="font-bold text-yellow-300 mt-6">Game Status</h3>
+                  <p className="text-gray-300">{gameStatus}</p>
+                </div>
+              </div>
+  
+              <div className="flex flex-col gap-2">
+                <button
+                  className="w-full px-4 py-2 bg-white text-gray-900 rounded-lg hover:bg-gray-200 transition-colors font-bold"
+                  onClick={() => startNewGame("white")}
+                >
+                  Play as White
+                </button>
+                <button
+                  className="w-full px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-700 transition-colors font-bold border border-white"
+                  onClick={() => startNewGame("black")}
+                >
+                  Play as Black
+                </button>
+                <button
+                  className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-bold"
+                  onClick={() => {
+                    game.undo();
+                    game.undo();
+                    setGamePosition(game.fen());
+                    updateGameStatus();
+                  }}
+                >
+                  Undo Move
+                </button>
+              </div>
+            </div>
+          </div>
+  
+          {/* Chess Board */}
+          <div className="lg:col-span-2">
+            <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
+              <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+                <Chessboard
+                  id="PlayVsStockfish"
+                  position={gamePosition}
+                  onPieceDrop={onDrop}
+                  boardOrientation={playerColor}
+                  customBoardStyle={{
+                    borderRadius: "8px",
+                    boxShadow: "0 8px 16px rgba(0, 0, 0, 0.3)",
+                    border: "2px solid #4a5568"
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+  
+          {/* Move History */}
+          <div className="lg:col-span-1">
+            <div className="bg-gray-800 p-4 rounded-lg shadow-lg h-[600px] overflow-auto">
+              <h2 className="text-xl font-bold mb-4 text-yellow-300">Move History</h2>
+              <div className="space-y-2">
+                {game.history().map((move, index) => (
+                  <div 
+                    key={index}
+                    className="p-2 hover:bg-gray-700 rounded text-gray-300 font-mono"
+                  >
+                    {Math.floor(index / 2) + 1}. {move}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-
-      {/* Main Game Section */}
-      <div className="flex-1 flex justify-center items-center p-4">
-        <div className="w-full max-w-[80vh] aspect-square">
-          <Chessboard
-            id="PlayVsStockfish"
-            position={gamePosition}
-            onPieceDrop={onDrop}
-            boardOrientation={playerColor}
-            customBoardStyle={{
-              borderRadius: "8px",
-              boxShadow: "0 8px 16px rgba(0, 0, 0, 0.3)",
-              border: "2px solid #4a5568"
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Footer Section */}
-      <div className="p-4 bg-gray-800">
-        {/* Game Status */}
-        <p className="text-xl font-bold text-center mb-4">
-          {gameStatus}
-        </p>
-
-        {/* Controls */}
-        <div className="flex justify-center gap-3 mb-4">
-          <button
-            className="px-6 py-2 bg-white text-gray-900 rounded-lg hover:bg-gray-200 transition-colors font-bold"
-            onClick={() => startNewGame("white")}
-          >
-            Play as White
-          </button>
-          <button
-            className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-700 transition-colors font-bold border border-white"
-            onClick={() => startNewGame("black")}
-          >
-            Play as Black
-          </button>
-          <button
-            className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-bold"
-            onClick={() => {
-              game.undo();
-              game.undo();
-              setGamePosition(game.fen());
-              updateGameStatus();
-            }}
-          >
-            Undo
-          </button>
-        </div>
-
-        {/* Home Link */}
-        <div className="text-center mb-4">
-          <Link 
-            to="/" 
-            className="text-blue-400 hover:text-blue-300 transition-colors"
-          >
-            Back to Lobby
+  
+        <div className="mt-6 text-center">
+          <Link to="/" className="text-blue-400 hover:text-blue-300 transition-colors mb-4 inline-block">
+            Return to Lobby
           </Link>
-        </div>
-
-        {/* Creator Credits */}
-        <div className="text-center text-gray-400 text-sm">
-          Created by Danish
+          <div className="text-gray-400 text-sm mt-4">
+            Created by Danish Vahora
+          </div>
         </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
 
 export default EnginePage;

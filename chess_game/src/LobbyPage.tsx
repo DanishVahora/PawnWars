@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { socket } from '../socket';
+import { Typewriter } from 'react-simple-typewriter';
 
 interface LobbyPageProps {
   setUsername: (username: string) => void;
@@ -33,7 +34,6 @@ const LobbyPage: React.FC<LobbyPageProps> = ({ setUsername, setRoomId, setPlayer
   const joinRoom = () => {
     if (!usernameInput || !roomInput) return;
 
-    // Joining player always gets black pieces
     socket.emit('join-room', {
       roomId: roomInput,
       username: usernameInput,
@@ -50,7 +50,19 @@ const LobbyPage: React.FC<LobbyPageProps> = ({ setUsername, setRoomId, setPlayer
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900 text-white">
       <div className="max-w-3xl w-full text-center mb-8">
         <h1 className="text-8xl font-bold mb-4 text-yellow-400 tracking-wide">PawnWars</h1>
-        <p className="text-xl text-gray-300">The ultimate online chess experience</p>
+        <div className="text-2xl font-bold mb-4 text-white-400 tracking-wide flex justify-center">
+          <p >Life is simple : </p>
+          <Typewriter
+            words={['Eat', 'Sleep', 'PlayChess', 'Repeat!']}
+            loop={15}
+            cursor
+            cursorStyle='..'
+            typeSpeed={70}
+            deleteSpeed={50}
+            delaySpeed={1000}
+
+          />
+        </div>
       </div>
 
       <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md">
@@ -97,7 +109,7 @@ const LobbyPage: React.FC<LobbyPageProps> = ({ setUsername, setRoomId, setPlayer
           >
             Join Room (Black Pieces)
           </button>
-          
+
           <div className="pt-4 border-t border-gray-600 mt-4">
             <h3 className="text-xl font-semibold mb-4 text-yellow-300 text-center">Practice Options</h3>
             <button
@@ -107,7 +119,7 @@ const LobbyPage: React.FC<LobbyPageProps> = ({ setUsername, setRoomId, setPlayer
               Play vs Computer
             </button>
             <button
-              onClick={() => navigate('/stockfishVsStockfish')}
+              onClick={() => navigate('/EngineVsEngine')}
               className="w-full bg-purple-600 text-white p-3 rounded hover:bg-purple-700 transition-colors font-semibold"
             >
               Watch Computer vs Computer
@@ -115,10 +127,10 @@ const LobbyPage: React.FC<LobbyPageProps> = ({ setUsername, setRoomId, setPlayer
           </div>
         </div>
       </div>
-      
+
       {/* Footer */}
       <div className="mt-8 text-gray-400 text-sm">
-        Created by Danish
+        Created by Danish Vahora
       </div>
     </div>
   );

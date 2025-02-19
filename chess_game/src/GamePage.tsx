@@ -20,6 +20,11 @@ interface MoveHistory {
   moveNumber: number;
 }
 
+interface PlayerInfo {
+  username: string;
+  color: 'white' | 'black';
+}
+
 const GamePage: React.FC<GamePageProps> = ({ username, playerColor }) => {
   const { roomId } = useParams();
   const [game, setGame] = useState(new Chess());
@@ -28,14 +33,34 @@ const GamePage: React.FC<GamePageProps> = ({ username, playerColor }) => {
   const [moveHistory, setMoveHistory] = useState<MoveHistory[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [messageInput, setMessageInput] = useState('');
-  const [opponent, setOpponent] = useState<string>('');
+  const [players, setPlayers] = useState<PlayerInfo[]>([]);
   const [gameStatus, setGameStatus] = useState<string>('');
   const chatRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    socket.on('opponent-joined', ({ username: opponentName }) => {
-      setOpponent(opponentName);
-    });
+    const initializeGame = async () => {
+      // Request initial game state
+      socket.emit('request-initial-data', roomId);
+
+      socket.on('initial-data', ({ moves, players }) => {
+        // Reconstruct game state from move history
+        const newGame = new Chess();
+        moves.forEach((move: any) => {
+          newGame.move({ from: move.from, to: move.to, promotion: 'q' });
+        });
+        setGame(newGame);
+        updateMoveHistory(newGame);
+        setPlayers(players);
+      });
+
+      socket.on('players-updated', (updatedPlayers: PlayerInfo[]) => {
+        setPlayers(updatedPlayers);
+        const opponent = updatedPlayers.find(p => p.username !== username);
+        if (opponent) socket.emit('set-opponent', opponent.username);
+      });
+    };
+
+    initializeGame();
 
     socket.on('opponent-move', ({ from, to }) => {
       const gameCopy = new Chess(game.fen());
@@ -53,11 +78,12 @@ const GamePage: React.FC<GamePageProps> = ({ username, playerColor }) => {
     });
 
     return () => {
-      socket.off('opponent-joined');
+      socket.off('initial-data');
+      socket.off('players-updated');
       socket.off('opponent-move');
       socket.off('chat-message');
     };
-  }, [game]);
+  }, [game, roomId, username]);
 
   const updateGameStatus = (currentGame: Chess) => {
     if (currentGame.isCheckmate()) {
@@ -73,29 +99,40 @@ const GamePage: React.FC<GamePageProps> = ({ username, playerColor }) => {
 
   const updateMoveHistory = (currentGame: Chess) => {
     const history = currentGame.history({ verbose: true });
-    const moves = history.map((move, index) => ({
-      move: `${Math.floor(index / 2) + 1}. ${move.san}`,
-      fen: move.after,
-      moveNumber: index + 1
-    }));
+    const moves: MoveHistory[] = [];
+    
+    for (let i = 0; i < history.length; i++) {
+      const moveNumber = Math.floor(i / 2) + 1;
+      const isWhiteMove = i % 2 === 0;
+      
+      if (isWhiteMove) {
+        moves.push({
+          move: `${moveNumber}. ${history[i].san}`,
+          fen: history[i].after,
+          moveNumber
+        });
+      } else {
+        const lastMove = moves[moves.length - 1];
+        lastMove.move += ` ${history[i].san}`;
+        lastMove.fen = history[i].after;
+      }
+    }
+
     setMoveHistory(moves);
   };
 
   function onSquareClick(square: string) {
-    // Get a list of possible moves
     const moves = game.moves({
       square,
       verbose: true
     });
 
     if (moveFrom === '') {
-      // No piece is selected yet
       if (moves.length > 0) {
         setMoveFrom(square);
         setPossibleMoves(moves.map((move: any) => move.to));
       }
     } else {
-      // Attempt to make the move
       const move = game.move({ from: moveFrom, to: square, promotion: 'q' });
       if (move) {
         socket.emit('make-move', {
@@ -108,7 +145,6 @@ const GamePage: React.FC<GamePageProps> = ({ username, playerColor }) => {
         updateMoveHistory(newGame);
         updateGameStatus(newGame);
       }
-      // Clear selected square and possible moves
       setMoveFrom('');
       setPossibleMoves([]);
     }
@@ -153,24 +189,20 @@ const GamePage: React.FC<GamePageProps> = ({ username, playerColor }) => {
     };
 
     socket.emit('send-message', { roomId, ...chatMessage });
-    setChatMessages(prev => [...prev, chatMessage]);
     setMessageInput('');
   };
 
   const customSquareStyles = () => {
     const styles: { [square: string]: { backgroundColor: string } } = {};
     
-    // Highlight possible moves
     possibleMoves.forEach(square => {
       styles[square] = { backgroundColor: 'rgba(255, 255, 0, 0.4)' };
     });
     
-    // Highlight selected square
     if (moveFrom) {
       styles[moveFrom] = { backgroundColor: 'rgba(255, 165, 0, 0.4)' };
     }
     
-    // Highlight check
     if (game.isCheck()) {
       const king = game.board().reduce((acc, row, i) => {
         const j = row.findIndex(piece => 
@@ -186,19 +218,23 @@ const GamePage: React.FC<GamePageProps> = ({ username, playerColor }) => {
     return styles;
   };
 
+  const getPlayerName = (color: 'white' | 'black') => {
+    const player = players.find(p => p.color === color);
+    return player ? player.username : 'Waiting...';
+  };
+
   return (
     <div className="min-h-screen p-4 bg-gray-900 text-white">
-      {/* Header with Logo */}
       <div className="mb-6 text-center">
         <h1 className="text-6xl font-bold mb-2 text-yellow-400 tracking-wide">PawnWars</h1>
-        <h2 className="text-2xl">Multiplayer Match</h2>
+        <h2 className="text-2xl">Live Game Session</h2>
       </div>
       
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-4">
-        {/* Chat Section - Left Side */}
+        {/* Chat Section */}
         <div className="lg:col-span-1">
           <div className="bg-gray-800 p-4 rounded-lg shadow-lg h-[600px] flex flex-col">
-            <h2 className="text-xl font-bold mb-4 text-yellow-300">Chat</h2>
+            <h2 className="text-xl font-bold mb-4 text-yellow-300">Game Chat</h2>
             <div className="flex-grow overflow-auto mb-4 p-4 border border-gray-700 rounded-md bg-gray-900" ref={chatRef}>
               {chatMessages.map((msg, idx) => (
                 <div 
@@ -229,12 +265,12 @@ const GamePage: React.FC<GamePageProps> = ({ username, playerColor }) => {
           </div>
         </div>
 
-        {/* Chess Board - Center */}
+        {/* Chess Board */}
         <div className="lg:col-span-2">
           <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
             <div className="mb-4 flex justify-between items-center">
               <h2 className="text-xl font-bold text-gray-300">
-                {opponent && playerColor === 'black' ? opponent : username} (Black)
+                {getPlayerName('black')} (Black)
               </h2>
               {gameStatus && (
                 <div className="text-red-400 font-bold">{gameStatus}</div>
@@ -258,7 +294,7 @@ const GamePage: React.FC<GamePageProps> = ({ username, playerColor }) => {
             
             <div className="mt-4 flex justify-between items-center">
               <h2 className="text-xl font-bold text-gray-300">
-                {opponent && playerColor === 'white' ? opponent : username} (White)
+                {getPlayerName('white')} (White)
               </h2>
               <div className="text-gray-400">
                 Room: {roomId}
@@ -267,15 +303,15 @@ const GamePage: React.FC<GamePageProps> = ({ username, playerColor }) => {
           </div>
         </div>
 
-        {/* Move History - Right Side */}
+        {/* Move History */}
         <div className="lg:col-span-1">
           <div className="bg-gray-800 p-4 rounded-lg shadow-lg h-[600px] overflow-auto">
-            <h2 className="text-xl font-bold mb-4 text-yellow-300">Move History</h2>
+            <h2 className="text-xl font-bold mb-4 text-yellow-300">Game History</h2>
             <div className="space-y-2">
               {moveHistory.map((move, index) => (
                 <div 
                   key={index}
-                  className="p-2 hover:bg-gray-700 rounded text-gray-300"
+                  className="p-2 hover:bg-gray-700 rounded text-gray-300 font-mono"
                 >
                   {move.move}
                 </div>
@@ -285,13 +321,12 @@ const GamePage: React.FC<GamePageProps> = ({ username, playerColor }) => {
         </div>
       </div>
 
-      {/* Back to Lobby Link and Footer */}
       <div className="mt-6 text-center">
         <Link to="/" className="text-blue-400 hover:text-blue-300 transition-colors mb-4 inline-block">
-          Back to Lobby
+          Return to Lobby
         </Link>
         <div className="text-gray-400 text-sm mt-4">
-          Created by Danish
+          Created by Danish Vahora
         </div>
       </div>
     </div>
