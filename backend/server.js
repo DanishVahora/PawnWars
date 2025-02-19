@@ -9,7 +9,7 @@ app.use(cors());
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "https://pawn-wars.vercel.app/" || "http://localhost:5173", 
+    origin: "https://pawn-wars.vercel.app/" , 
     methods: ["GET", "POST"]
   }
 });
