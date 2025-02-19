@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Chessboard } from 'react-chessboard';
-import { Chess } from 'chess.js';
+import { Chess, Square } from 'chess.js';
 import { useParams, Link } from 'react-router-dom';
 import { socket } from '../socket';
 
@@ -121,7 +121,7 @@ const GamePage: React.FC<GamePageProps> = ({ username, playerColor }) => {
     setMoveHistory(moves);
   };
 
-  function onSquareClick(square: string) {
+  function onSquareClick(square: Square) { // Change type to Square
     const moves = game.moves({
       square,
       verbose: true
@@ -133,7 +133,7 @@ const GamePage: React.FC<GamePageProps> = ({ username, playerColor }) => {
         setPossibleMoves(moves.map((move: any) => move.to));
       }
     } else {
-      const move = game.move({ from: moveFrom, to: square, promotion: 'q' });
+      const move = game.move({ from: moveFrom as Square, to: square, promotion: 'q' });
       if (move) {
         socket.emit('make-move', {
           roomId,

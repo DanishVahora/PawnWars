@@ -7,8 +7,11 @@ import StockfishVsStockfish from './StockfishVsStockfish';
 
 const App: React.FC = () => {
   const [username, setUsername] = useState('');
+  
   const [roomId, setRoomId] = useState('');
   const [playerColor, setPlayerColor] = useState<'white' | 'black'>('white');
+  
+  console.log("Id", roomId);
 
   return (
     <Router>

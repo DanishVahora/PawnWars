@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { socket } from '../socket';
 import { Typewriter } from 'react-simple-typewriter';
 
@@ -51,9 +51,9 @@ const LobbyPage: React.FC<LobbyPageProps> = ({ setUsername, setRoomId, setPlayer
       <div className="max-w-3xl w-full text-center mb-8">
         <h1 className="text-8xl font-bold mb-4 text-yellow-400 tracking-wide">PawnWars</h1>
         <div className="text-2xl font-bold mb-4 text-white-400 tracking-wide flex justify-center">
-          <p >Life is simple : </p>
+          <p >Life is simple :  </p>
           <Typewriter
-            words={['Eat', 'Sleep', 'PlayChess', 'Repeat!']}
+            words={[' Eat', ' Sleep', ' PlayChess', ' Repeat!']}
             loop={15}
             cursor
             cursorStyle='..'
