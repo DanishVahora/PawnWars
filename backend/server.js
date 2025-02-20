@@ -13,7 +13,7 @@ app.get('/', (req, res) => {
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "https://pawn-wars.vercel.app/" , 
+    origin: "*" , 
     methods: ["GET", "POST"]
   }
 });
