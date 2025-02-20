@@ -7,4 +7,4 @@ const socket = io(import.meta.env.VITE_BACKEND_URL?.trim() || "http://localhost:
 });
 
 
-export default socket;
+export socket;
