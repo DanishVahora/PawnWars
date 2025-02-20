@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Chessboard } from 'react-chessboard';
 import { Chess, Square } from 'chess.js';
 import { useParams, Link } from 'react-router-dom';
-import { socket } from '../socket';
+import socket from '../socket';
 
 interface GamePageProps {
   username: string;
