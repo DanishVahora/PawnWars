@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { socket } from '../socket';
+import socket from '../socket';
 import { Typewriter } from 'react-simple-typewriter';
 
 interface LobbyPageProps {
