@@ -15,7 +15,8 @@ const io = new Server(server, {
   cors: {
     origin: "https://pawn-wars.vercel.app" , 
     methods: ["GET", "POST"]
-  }
+  },
+    transports: ["polling"],
 });
 
 // Store room information
