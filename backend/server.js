@@ -7,18 +7,18 @@ const app = express();
 app.use(cors());
 
 app.get('/', (req, res) => {
-    res.send("GET Request Called")
+  res.send("GET Request Called")
 })
 
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173" , 
-    origin: "https://pawn-wars.vercel.app" , 
-    methods: ["GET", "POST"]
-  },
-    transports: ["polling"],
+    origin: ["http://localhost:5173", "https://pawn-wars.vercel.app"],
+    methods: ["GET", "POST"],
+    credentials: true
+  }
 });
+
 
 // Store room information
 const rooms = new Map();
@@ -27,44 +27,52 @@ io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
   // Handle room creation
-  socket.on('create-room', ({ roomId, username, color }) => {
+  socket.on('create-room', ({ roomId, username }) => {
     rooms.set(roomId, {
       players: [{
         id: socket.id,
         username,
-        color
+        color: 'white' // Creator is always white
       }],
       moves: []
     });
-    
+
     socket.join(roomId);
+
+    // Emit players-updated event for the first player
+    io.to(roomId).emit('players-updated', rooms.get(roomId).players);
+
     console.log(`Room ${roomId} created by ${username}`);
   });
 
+
   // Handle room joining
-  socket.on('join-room', ({ roomId, username, color }) => {
+  // Handle room joining
+  socket.on('join-room', ({ roomId, username }) => {
     const room = rooms.get(roomId);
-    
+
     if (room && room.players.length < 2) {
       room.players.push({
         id: socket.id,
         username,
-        color
+        color: 'black' // Joiner is always black
       });
-      
+
       socket.join(roomId);
-      
-      // Send initial data to the new player
-      socket.emit('initial-data', {
+
+      // Send initial data to both players
+      io.to(roomId).emit('initial-data', {
         moves: room.moves,
         players: room.players
       });
-      
-      // Notify both players about the updated player list
+
+      // Emit an update to all clients in the room about the players
       io.to(roomId).emit('players-updated', room.players);
+
       console.log(`${username} joined room ${roomId}`);
     }
   });
+
 
   // Handle chess moves
   socket.on('make-move', ({ roomId, from, to }) => {
@@ -94,18 +102,23 @@ io.on('connection', (socket) => {
 
   // Handle disconnection
   socket.on('disconnect', () => {
-    // Clean up rooms when players disconnect
     rooms.forEach((room, roomId) => {
       const playerIndex = room.players.findIndex(p => p.id === socket.id);
       if (playerIndex !== -1) {
         room.players.splice(playerIndex, 1);
+
+        // If room is empty, delete it
         if (room.players.length === 0) {
           rooms.delete(roomId);
+        } else {
+          // Notify remaining player of the update
+          io.to(roomId).emit('players-updated', room.players);
         }
       }
     });
     console.log('User disconnected:', socket.id);
   });
+
 });
 
 const PORT = process.env.PORT || 3001;

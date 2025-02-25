@@ -54,10 +54,18 @@ const GamePage: React.FC<GamePageProps> = ({ username, playerColor }) => {
       });
 
       socket.on('players-updated', (updatedPlayers: PlayerInfo[]) => {
-        setPlayers(updatedPlayers);
-        const opponent = updatedPlayers.find(p => p.username !== username);
-        if (opponent) socket.emit('set-opponent', opponent.username);
+        // Ensure each player is uniquely assigned by checking their colors
+        const assignedPlayers = updatedPlayers.reduce((acc: PlayerInfo[], player) => {
+          if (!acc.some(p => p.color === player.color)) {
+            acc.push(player);
+          }
+          return acc;
+        }, []);
+      
+        setPlayers(assignedPlayers);
       });
+      
+      
     };
 
     initializeGame();
@@ -236,9 +244,11 @@ const GamePage: React.FC<GamePageProps> = ({ username, playerColor }) => {
   };
 
   const getPlayerName = (color: 'white' | 'black') => {
+    console.log("Current players state:", players); // Debugging log
     const player = players.find(p => p.color === color);
     return player ? player.username : 'Waiting...';
   };
+  
 
   return (
     <div className="min-h-screen p-4 bg-gray-900 text-white">
