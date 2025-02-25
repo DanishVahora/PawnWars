@@ -60,7 +60,11 @@ npm run dev # (the official chess referee)
 npm start # Warning: May cause chess addiction
 ```
 
-**📸 Screenshots (Because Pictures > 1000 Words)**
+## 📸 Screenshots (Because Pictures > 1000 Words)
+
+**Me vs Engine : **
 ![alt text](https://github.com/DanishVahora/PawnWars/blob/main/chess_game/src/assets/image1.png)
+
+Me vs Magnus : **
 ![alt text](https://github.com/DanishVahora/PawnWars/blob/main/chess_game/src/assets/image3.png)
 ![alt text](https://github.com/DanishVahora/PawnWars/blob/main/chess_game/src/assets/image4.png)
