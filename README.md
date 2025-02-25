@@ -61,5 +61,5 @@ npm start # Warning: May cause chess addiction
 ```
 
 **📸 Screenshots (Because Pictures > 1000 Words)**
-![alt text](https://github.com/DanishVahora/PawnWars/blob/main/image1.jpg?raw=true)
-![alt text](https://github.com/DanishVahora/PawnWars/blob/main/image2.jpg?raw=true)
+![alt text](https://github.com/DanishVahora/PawnWars/blob/main/image1.png?raw=true)
+![alt text](https://github.com/DanishVahora/PawnWars/blob/main/image2.png?raw=true)
