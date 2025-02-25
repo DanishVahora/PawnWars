@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import LobbyPage from './LobbyPage';
-import GamePage from './GamePage';
-import EnginePage from './EnginePage';
-import StockfishVsStockfish from './StockfishVsStockfish';
+import LobbyPage from './components/LobbyPage';
+import GamePage from './components/GamePage';
+import EnginePage from './components/EnginePage';
+import StockfishVsStockfish from './components/StockfishVsStockfish';
 
 const App: React.FC = () => {
   const [username, setUsername] = useState('');

@@ -2,7 +2,6 @@ import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Chessboard } from "react-chessboard";
 import { Chess } from "chess.js";
-import "./App.css";
 
 // Define a simple Engine class that uses a Stockfish worker
 class Engine {

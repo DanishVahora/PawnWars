@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Chessboard } from 'react-chessboard';
 import { Chess, Square } from 'chess.js';
 import { useParams, Link } from 'react-router-dom';
-import { socket } from '../socket';
+import { socket } from '../../socket';
 
 interface GamePageProps {
   username: string;
@@ -121,30 +121,47 @@ const GamePage: React.FC<GamePageProps> = ({ username, playerColor }) => {
     setMoveHistory(moves);
   };
 
-  function onSquareClick(square: Square) { // Change type to Square
-    const moves = game.moves({
-      square,
-      verbose: true
-    });
-
+  function onSquareClick(square: Square) {
+    // Prevent interaction if it's not the player's turn
+    if (game.turn() !== playerColor[0]) return;
+  
+    const piece = game.get(square);
+  
     if (moveFrom === '') {
+      // First click - select piece
+      if (!piece || piece.color !== playerColor[0]) return;
+  
+      const moves = game.moves({ square, verbose: true });
       if (moves.length > 0) {
         setMoveFrom(square);
         setPossibleMoves(moves.map((move: any) => move.to));
       }
     } else {
-      const move = game.move({ from: moveFrom as Square, to: square, promotion: 'q' });
-      if (move) {
-        socket.emit('make-move', {
-          roomId,
-          from: moveFrom,
-          to: square
-        });
-        const newGame = new Chess(game.fen());
-        setGame(newGame);
-        updateMoveHistory(newGame);
-        updateGameStatus(newGame);
+      // Second click - make move or deselect
+      if (square === moveFrom) {
+        // Deselect on clicking the same square
+        setMoveFrom('');
+        setPossibleMoves([]);
+        return;
       }
+  
+      // Validate move against possible moves
+      if (possibleMoves.includes(square)) {
+        try {
+          const move = game.move({ from: moveFrom, to: square, promotion: 'q' });
+          if (move) {
+            socket.emit('make-move', { roomId, from: moveFrom, to: square });
+            const newGame = new Chess(game.fen());
+            setGame(newGame);
+            updateMoveHistory(newGame);
+            updateGameStatus(newGame);
+          }
+        } catch (error) {
+          console.error('Invalid move:', error);
+        }
+      }
+      
+      // Always reset selection after second click
       setMoveFrom('');
       setPossibleMoves([]);
     }
